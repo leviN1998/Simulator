@@ -31,11 +31,11 @@ focal_length: 9.0                            # Focal length of the camera in [mm
 pixel_pitch: 0.0075                          # Pixel pitch of the camera in [mm]
 
 # event camera settings
-th_pos: 0.15                                 # on threshold
-th_neg: 0.15                                 # off threshold
+th_pos: 0.25                                 # on threshold
+th_neg: 0.25                                 # off threshold
 th_n: 0.05                                   # noise threshold
 lat: 500                                     # latency
 tau: 70                                      # time constant
 jit: 100                                     # jitter
 bgn: 0.0001                                  # background noise
-ref_period: 50                               # ref-time of the event camera
+ref_period: 100                               # ref-time of the event camera

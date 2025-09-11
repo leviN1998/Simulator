@@ -59,7 +59,7 @@ def get_voxel_grid_as_image(voxelgrid: np.ndarray) -> np.ndarray:
 
 
 
-def events_to_voxel(xs, ys, ts, ps, num_bins: int = 10, sensor_size: tuple[int, int] = (1280, 720)) -> np.ndarray:
+def events_to_voxel(xs, ys, ts, ps, num_bins: int = 10, sensor_size: tuple[int, int] = (1280, 720), normalize: bool =True) -> np.ndarray:
     """ Convert an event buffer to a voxel representation.
     
         Important: This function converts all events ointo a single voxel grid.
@@ -76,6 +76,8 @@ def events_to_voxel(xs, ys, ts, ps, num_bins: int = 10, sensor_size: tuple[int, 
         ps (np.ndarray): The polarities of the events.
         num_bins (int): The number of bins for the voxel grid. Defaults to 10.
         sensor_size (tuple[int, int]): The size of the sensor (width, height). Defaults to (1280, 720).
+        normalize (bool): Whether to normalize the voxel grid to [0, 255]. Defaults to True.
+
     Returns:
         np.ndarray: [B, x, y] The voxel grid representation of the events.
     """
@@ -106,7 +108,8 @@ def events_to_voxel(xs, ys, ts, ps, num_bins: int = 10, sensor_size: tuple[int, 
         v = np.bincount(abs_coords, minlength=img_size[0] * img_size[1])
         v = v.reshape(img_size)
         voxel_grid[b] = v[0:sensor_size[0], 0:sensor_size[1]]
-        voxel_grid[b] = (voxel_grid[b] / voxel_grid[b].max() * 255).astype(np.float32) if voxel_grid[b].max() > 0 else voxel_grid[b]
+        if normalize:
+            voxel_grid[b] = (voxel_grid[b] / voxel_grid[b].max() * 255).astype(np.float32) if voxel_grid[b].max() > 0 else voxel_grid[b]
 
     return voxel_grid
 
@@ -115,7 +118,7 @@ def events_to_voxel(xs, ys, ts, ps, num_bins: int = 10, sensor_size: tuple[int, 
 # TODO: check if dataloading is fast enought -> TimoStoff has some torch dataloading stuff
 
 
-def create_sequence(events, time_window=500, num_bins=10, sensor_size=(100, 100), flip=False) -> np.ndarray:
+def create_sequence(events, time_window=500, num_bins=10, sensor_size=(100, 100), flip: bool=False, normalize: bool=True) -> np.ndarray:
     """ Create a sequence of voxel grids from events.
 
     This is usefull for preprocessing data such that e.g. FireNet can use it as input
@@ -144,7 +147,7 @@ def create_sequence(events, time_window=500, num_bins=10, sensor_size=(100, 100)
         mask = bin_indices == i
         seq = events[mask]
         if len(seq) > 0:
-            sequences[i] = events_to_voxel(seq['x'], seq['y'], seq['t'], seq['p'], num_bins=num_bins, sensor_size=sensor_size)
+            sequences[i] = events_to_voxel(seq['x'], seq['y'], seq['t'], seq['p'], num_bins=num_bins, sensor_size=sensor_size, normalize=normalize)
             if flip:
                 sequences[i] = np.flip(sequences[i], axis=(1,2))
 

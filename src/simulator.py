@@ -427,9 +427,19 @@ if __name__ == "__main__":
     events["y"] -= top
     out.add_array(events["t"], events["y"], events["x"], events["p"])
     
-    sequence = event_representations.create_sequence(eventIO.buffer_to_array(out), time_window=5000, num_bins=10, sensor_size=(100, 100), flip=False)
+    sequence = event_representations.create_sequence(eventIO.buffer_to_array(out), time_window=5000, num_bins=10, sensor_size=(100, 100), flip=False, normalize=False)
     print("Sequence shape: ", sequence.shape)
+    real_path = f"/home/lkolmar/Documents/metavision/recordings/dataset_full_ball-gun/roi/spike_5_spin_6_rec2_converted.hdf5"
+    real_buf = eventIO.load_hdf5(real_path)
+    real_sequence = event_representations.create_sequence(eventIO.buffer_to_array(real_buf), time_window=5000, num_bins=10, sensor_size=(100, 100), flip=False, normalize=False)
+    print(f"Total events: {np.sum(sequence[1])}, Real events: {np.sum(real_sequence[1])}")
+    print(f"Ratio sim/real: {np.sum(sequence[1])/np.sum(real_sequence[1])}")
     import matplotlib.pyplot as plt
-    plt.imshow(event_representations.get_voxel_grid_as_image(sequence[1]))
+    fig, axes = plt.subplots(2, 1, figsize=(20, 5))
+    axes[0].imshow(event_representations.get_voxel_grid_as_image(sequence[1]))
+    axes[0].set_title("Simulated events")
+    axes[1].imshow(event_representations.get_voxel_grid_as_image(real_sequence[1]))
+    axes[1].set_title("Real events")
+
     plt.show()
-    plt.savefig("/data/lkolmar/datasets/test/data/00000/plot.png")
+    fig.savefig("/data/lkolmar/datasets/test/data/00000/plot.png")
