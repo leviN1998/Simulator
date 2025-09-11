@@ -1,0 +1,48 @@
+# Conda setup (Simulator):
+
+Resources: 
+    https://developer.blender.org/docs/handbook/building_blender/linux/
+    https://developer.blender.org/docs/handbook/building_blender/python_module/
+
+    For metavision:
+        export HDF5_PLUGIN_PATH=$HDF5_PLUGIN_PATH:/usr/lib/x86_64-linux-gnu/hdf5/serial/plugins
+
+
+1. Create conda env
+    conda create -n "simulator" python=3.11
+    conda activate simulator
+
+2. Build blender
+    mkdir blender-git
+    cd blender git
+    git clone https://projects.blender.org/blender/blender.git
+    cd blender
+    ./build_files/build_environment/install_linux_packages.py
+    make update
+    make bpy
+
+3. install bpy into conda env
+    python ./build_files/utils/make_bpy_wheel.py ../build_linux_bpy/bin
+    pip install ../build_linux_bpy/bin/bpy-5.0.0a0-cp311-cp311-manylinux_2_35_x86_64.whl
+
+4. install dependencies for IEBCS
+    pip install opencv-python
+    pip install pandas
+    pip install matplotlib
+    pip install loris
+    conda install -c conda-forge libstdcxx-ng=12
+
+5. install IEBCS
+    https://github.com/neuromorphicsystems/IEBCS
+    git switch 3c4b99c
+    cd cpp
+    ./compile_test.sh
+    pip install build
+
+6. Install other dependencies
+    pip install pyaml
+    pip install h5py
+    pip install hdf5plugin
+    pip install ipykernel
+    pip install rootutils
+
