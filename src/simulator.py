@@ -161,6 +161,11 @@ class Simulator:
         angle = angle * np.pi / 180.0 # convert to radians
         self.ball.rotation_axis_angle = (angle, ax[0], ax[1], ax[2])
         # apply initial rotation
+        # make it active and the only selected object
+        bpy.context.view_layer.objects.active = self.ball
+        for o in bpy.context.selected_objects:
+            o.select_set(False)
+        self.ball.select_set(True)
         bpy.ops.object.transform_apply(location=False, rotation=True, scale=False)
 
 
