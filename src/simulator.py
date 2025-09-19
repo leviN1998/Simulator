@@ -281,6 +281,8 @@ class Simulator:
             "camera_rotation_world_x": [self.event_camera.cam.rotation_euler[0]],
             "camera_rotation_world_y": [self.event_camera.cam.rotation_euler[1]],
             "camera_rotation_world_z": [self.event_camera.cam.rotation_euler[2]],
+            "ball_scale_start": [self.ball_scale_start],
+            "ball_scale_end": [self.ball_scale_end],
             "total_frames": [self.total_frames],
             "total_rotations": [self.total_rotations],
             "video_length": [self.video_length],

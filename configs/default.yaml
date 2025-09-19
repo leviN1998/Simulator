@@ -1,6 +1,6 @@
 # General settings
 generate_video: true                         # Generate frame-based video
-stop_early: true                             # stop after a few frame sfor debugging
+stop_early: true                          # stop after a few frames for debugging
 
 # Paths
 dataset_path: "/data/lkolmar/datasets/test/" # Path to the dataset directory
@@ -8,13 +8,13 @@ dataset_path: "/data/lkolmar/datasets/test/" # Path to the dataset directory
 # Spin settings
 initial_orientation: [0.0, 0.0, 0.0]         # Initial orientation of the ball in [x, y, z] in axis-angle representation
 spin_axis: [0.0, 0.0, 1.0]                   # Axis of rotation in [x, y, z]
-total_rotations: 9.0                         # Total number of rotations to perform (rps is set implicitly by the simulation time)
+total_rotations: 0.0                         # Total number of rotations to perform (rps is set implicitly by the simulation time)
 
 # Trajectory setting
-ball_start: [0.0, -0.45, 0.0]              # Starting position of the ball in [m, m, m]
-ball_end: [0.0, 0.45, 0.0]                  # Ending position of the ball in [m, m, m]
-scale_start: 2.0                             # Scale of the ball at the start position
-scale_end: 2.0                               # Scale of the ball at the end position
+ball_start: [0.0, -0.45, -0.25]              # Starting position of the ball in [m, m, m]
+ball_end: [0.0, 0.45, 0.25]                  # Ending position of the ball in [m, m, m]
+scale_start: 2.3                             # Scale of the ball at the start position
+scale_end: 2.3                               # Scale of the ball at the end position
 
 # simulation settings
 total_frames: 1000                           # Total number of frames to simulate
