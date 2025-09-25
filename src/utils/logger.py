@@ -8,6 +8,7 @@ class Logger:
         self.info_file = open(f"{self.path}info.log", "a", buffering=1)
         self.debug_file = open(f"{self.path}debug.log", "a", buffering=1)
         self.progress_file = open(f"{self.path}progress.log", "a", buffering=1)
+        self.thread_file = open(f"{self.path}thread.log", "a", buffering=1)
 
     def error(self, message: str):
         print(f"ERROR: {message}")
@@ -31,9 +32,14 @@ class Logger:
         # put into debug as well
         self.debug_file.write(f"PROGRESS: {message}\n")
 
+    def thread(self, message: str):
+        print(f"THREAD: {message}")
+        self.thread_file.write(f"THREAD: {message}\n")
+
     def close(self):
         self.error_file.close()
         self.info_file.close()
         self.debug_file.close()
         self.progress_file.close()
+        self.thread_file.close()
         print("Logger closed.")

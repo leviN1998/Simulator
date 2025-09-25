@@ -12,6 +12,7 @@ import os
 import sys
 import numpy as np
 import pandas as pd
+import threading
 sys.path.append("src/utils")
 sys.path.append("src/IEBCS")
 sys.path.append("../src/IEBCS") # debug
@@ -311,6 +312,22 @@ class Simulator:
         coords_df.to_csv(self.coords_path, index=False)
         self.logger.debug(f"Ball coordinates saved to {self.coords_path}")
 
+    @staticmethod
+    def _redirect_output(logfile):
+        with open(logfile, 'a') as f:
+            f.write("\n\n========== NEW BLENDER OUTPUT (static method) ==========\n\n")
+            
+        old = os.dup(sys.stdout.fileno())
+        sys.stdout.flush()
+        os.close(sys.stdout.fileno())
+        fd = os.open(logfile, os.O_WRONLY | os.O_APPEND)
+        return old, fd
+
+    @staticmethod
+    def _restore_output(old, fd):
+        os.close(fd)
+        os.dup(old)
+        os.close(old)
 
     def redirect_output(self):
         """ Redirect the blender output to a file
@@ -350,6 +367,7 @@ class Simulator:
             self.redirect_output()
         start_ts = time.time()
         end_ts = time.time()
+        frames = []
         for frame in range(self.scene.frame_start, self.scene.frame_end+1):
             duration = end_ts - start_ts
             start_ts = time.time()
@@ -400,17 +418,50 @@ class Simulator:
             if self.generate_video:
                 video.write(img)
 
+            frames.append(img)
+            """
             if frame == 0:
                 self.event_camera.init_image(img)
             else:
                 delta_t = 1000000.0 * (1.0 / self.fps)  # delta t in us (1000000 us = 1 s)
                 pk = self.event_camera.update(img, delta_t)
                 ev.increase_ev(pk)
+            """
             end_ts = time.time()
 
             if self.stop_early and frame >= 40:
                 self.logger.info("Stopping early for debugging purposes.")
                 break
+
+        def process_events(frames, fps, event_camera, ev, th_pos, th_neg, th_n, lat, tau, jit, bgn, ref_period, output_name, logger, logfile, sim_nr):
+            old, fd = Simulator._redirect_output(logfile)
+            start_ts = time.time()
+            event_camera.init_image(frames[0])  
+            for frame in frames[1:]:
+                delta_t = 1000000.0 * (1.0 / fps)
+                pk = event_camera.update(frame, delta_t)
+                ev.increase_ev(pk)
+            Simulator._restore_output(old, fd)
+            bias = [th_pos, th_neg, th_n, lat, tau, jit, bgn, ref_period]
+            eventIO.save_hdf5(ev, output_name + "events.hdf5", bias)
+            end_ts = time.time()
+            duration_events = end_ts - start_ts
+            logger.debug(f"Event creation took {duration_events:.2f}s")
+            logger.thread(f"Event processing finished for simulation {sim_nr}, took: {duration_events:.2f}s")
+
+        # Start event processing in a separate thread
+        logfile = self.dataset_path + f"tmp/pid_{self.pid}/render_ev.log"
+        event_thread = threading.Thread(
+            target=process_events,
+            args=(
+                frames, self.fps, self.event_camera, ev,
+                self.th_pos, self.th_neg, self.th_n, self.lat, self.tau, self.jit, self.bgn, self.ref_period,
+                self.output_name, self.logger, logfile, self.simulation_nr
+            )
+        )
+        logger.thread(f"Starting event processing thread for simulation: {self.simulation_nr}")
+        event_thread.start()
+
 
         if not self.stop_early:
             self.restore_output()
@@ -419,8 +470,6 @@ class Simulator:
             video.release()
             self.logger.debug(f"Video saved to {self.output_name}frames.avi")
 
-        bias = [self.th_pos, self.th_neg, self.th_n, self.lat, self.tau, self.jit, self.bgn, self.ref_period]
-        eventIO.save_hdf5(ev, self.output_name + "events.hdf5", bias)
 
         self.save_ground_truth()
 
@@ -457,6 +506,7 @@ if __name__ == "__main__":
 
     import eventIO
     import event_representations
+
     buf = eventIO.load_hdf5("/data/lkolmar/datasets/test/data/00000/00000_events.hdf5")
     print("Duration: ", (buf.get_ts().max() - buf.get_ts().min()), "us")
     evs = eventIO.buffer_to_array(buf)
