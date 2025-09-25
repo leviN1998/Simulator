@@ -62,6 +62,8 @@ class Simulator:
         """
         self.generate_video = config["generate_video"]
         self.stop_early = config["stop_early"]
+        self.render_roi = config["render_roi"]
+        self.roi_size = config["roi_size"]
 
         self.dataset_path = config["dataset_path"]
 
@@ -147,6 +149,15 @@ class Simulator:
         self.event_camera.set_angle(cam_rot)
         self.event_camera.init_tension()
         self.event_camera.init_bgn_hist(self.dataset_path + "noise/noise_pos_161lux.npy", self.dataset_path + "noise/noise_pos_161lux.npy")
+
+        # border
+        if self.render_roi:
+            self.scene.render.use_border = True 
+            self.scene.render.use_crop_to_border = True
+            # Window size in normalized coordinates
+            self.border_width = self.roi_size / self.resolution_x
+            self.border_height = self.roi_size / self.resolution_y
+
 
 
     def apply_initial_rotation(self):
@@ -347,9 +358,41 @@ class Simulator:
                 self.logger.progress(f"Simulation {self.simulation_nr}: Rendering frame {frame}/{self.scene.frame_end}  ({duration:.2f} s/frame, {int(duration*self.total_frames)}s total.)")
             self.scene.frame_set(frame)
 
+            # Set border
+            if self.render_roi:
+                min_x = frame / self.total_frames * (1.0 - self.border_width)
+                max_x = min_x + self.border_width
+
+                ball_y = self.get_screen_positions()[1] / self.resolution_y
+                min_y = max(ball_y - self.border_height / 2.0, 0.0)
+                max_y = min(ball_y + self.border_height / 2.0, 1.0)
+
+                self.scene.render.border_min_x = min_x
+                self.scene.render.border_max_x = max_x
+                self.scene.render.border_min_y = min_y
+                self.scene.render.border_max_y = max_y
+
             self.scene.render.filepath = self.tmp_path
             bpy.ops.render.render(write_still=True)
             img = cv2.imread(self.tmp_path)
+
+            if self.render_roi:
+                # place ROI in full image at correct position
+                big_img = np.zeros((self.resolution_y, self.resolution_x, 3), dtype=np.uint8)
+                x, y = self.get_screen_positions()
+                x, y = int(x), int(y)
+                h, w = img.shape[:2]
+                H, W = big_img.shape[:2]
+                x1 = max(x, 0)
+                y1 = max(y, 0)
+                x2 = min(x + w, W)
+                y2 = min(y + h, H)
+                src_x1 = x1 - x
+                src_y1 = y1 - y
+                src_x2 = src_x1 + (x2 - x1)
+                src_y2 = src_y1 + (y2 - y1)
+                big_img[y1:y2, x1:x2] = img[src_y1:src_y2, src_x1:src_x2]
+                img = big_img
 
             self.logger.debug(f"Ball Location: {self.ball.location}, Frame: {frame}, Image shape: {img.shape}")
 
@@ -365,7 +408,7 @@ class Simulator:
                 ev.increase_ev(pk)
             end_ts = time.time()
 
-            if self.stop_early and frame >= 20:
+            if self.stop_early and frame >= 40:
                 self.logger.info("Stopping early for debugging purposes.")
                 break
 
