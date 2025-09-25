@@ -373,7 +373,7 @@ class Simulator:
             self.redirect_output()
         start_ts = time.time()
         end_ts = time.time()
-        frames = []
+        # frames = []
         for frame in range(self.scene.frame_start, self.scene.frame_end+1):
             duration = end_ts - start_ts
             start_ts = time.time()
@@ -424,20 +424,22 @@ class Simulator:
             if self.generate_video:
                 video.write(img)
 
-            frames.append(img)
-            """
+            # frames.append(img)
+            
             if frame == 0:
                 self.event_camera.init_image(img)
             else:
                 delta_t = 1000000.0 * (1.0 / self.fps)  # delta t in us (1000000 us = 1 s)
                 pk = self.event_camera.update(img, delta_t)
                 ev.increase_ev(pk)
-            """
+            
             end_ts = time.time()
 
             if self.stop_early and frame >= 40:
                 self.logger.info("Stopping early for debugging purposes.")
                 break
+
+        """
 
         def process_events(frames, fps, event_camera, ev, th_pos, th_neg, th_n, lat, tau, jit, bgn, ref_period, output_name, logger, logfile, sim_nr):
             old, fd = Simulator._redirect_output(logfile)
@@ -465,8 +467,11 @@ class Simulator:
                 self.output_name, self.logger, logfile, self.simulation_nr
             )
         )
-        logger.thread(f"Starting event processing thread for simulation: {self.simulation_nr}")
+        self.logger.thread(f"Starting event processing thread for simulation: {self.simulation_nr}")
         event_thread.start()
+        """
+        bias = [self.th_pos, self.th_neg, self.th_n, self.lat, self.tau, self.jit, self.bgn, self.ref_period]
+        eventIO.save_hdf5(ev, self.output_name + "events.hdf5", bias)
 
 
         if not self.stop_early:
