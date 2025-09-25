@@ -42,6 +42,27 @@ def make_folder_structure(path:str) -> None:
         print(f"One of the files could not be created. Please fix! Error: {e}")
 
 
+def angle_to_axis(vx, vy, vz, zhat):
+    norm = np.sqrt(vx*vx + vy*vy + vz*vz)
+    if norm == 0:
+        return np.nan
+    # Skalarprodukt durch Norm => cos(theta)
+    cos_theta = (vx*zhat[0] + vy*zhat[1] + vz*zhat[2]) / norm
+    # numerische Stabilisierung
+    cos_theta = np.clip(cos_theta, -1.0, 1.0)
+    return np.degrees(np.arccos(abs(cos_theta)))
+
+def is_top_or_backspin(axis: np.ndarray, threshold_angle: float, reference_axis: np.ndarray = np.array([1, 0, 0])) -> bool:
+    """ Check if the rotation axis is top or backspin
+
+        This function checks if the rotation axis is within the threshold angle to the reference axis.
+        The reference axis is by default the x-axis, which means that a top or backspin is around the x-axis.
+
+        Args:
+            axis (np.ndarray): Rotation axis to check"""
+    return angle_to_axis(axis[0], axis[1], axis[2], reference_axis) <= threshold_angle
+
+
 def create_rotations(n:int, max_speed:float=80, min_speed:float=5) -> np.ndarray:
     """ Creates Rotations in a cubic way, as discussed with David
 
@@ -67,7 +88,14 @@ def create_rotations(n:int, max_speed:float=80, min_speed:float=5) -> np.ndarray
     distances = np.linalg.norm(points, axis=1)
     # points = points[(distances <= 1) & (distances >= (min_speed / max_speed))]
     points = points[distances <= 1]
+
+    # select topspin and backspin
+    threshold_angle = 20  # deg
+    mask = np.array([is_top_or_backspin(p, threshold_angle) for p in points])
+    points = points[mask]
+
     points = points * max_speed
+
     return points
 
 
