@@ -32,7 +32,7 @@ for ((i=0; i<$1; i++)); do
     sims_to_do=$simulations_per_thread
     if [ $i -eq $(( $1 - 1 )) ]; then
         sims_to_do=0
-        sims_to_do=$simulations_per_thread
+        # sims_to_do=$simulations_per_thread
     fi
 
     echo "Starting thread $i with idx $idx and count $sims_to_do"

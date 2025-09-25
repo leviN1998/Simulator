@@ -123,8 +123,14 @@ class Simulator:
         self.scene.render.image_settings.file_format = 'PNG'
 
         # set background
-        bpy.data.worlds["World"].use_nodes = True
-        bg = bpy.data.worlds["World"].node_tree.nodes["Background"]
+        world = bpy.data.worlds.get("World")
+        if world.node_tree is None:
+            world.use_nodes = True
+            world.node_tree = bpy.data.node_groups.new("WorldNodeTree", 'ShaderNodeTree')
+
+        # bpy.data.worlds["World"].use_nodes = True
+        # bg = bpy.data.worlds["World"].node_tree.nodes["Background"]
+        bg = world.node_tree.nodes["Background"]
         bg.inputs[0].default_value = (0.1, 0.1, 0.1, 1)  # R, G, B, Alpha (black)
         bg.inputs[1].default_value = 0.0
 
