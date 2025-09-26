@@ -27,13 +27,14 @@ done
 echo "Starting $1 threads with offset $2 for $3 simulations"
 simulations_per_thread=$(( $3 / $1 ))
 echo "Each thread will run $simulations_per_thread simulations"
-start_idx=6000
+#start_idx=6000
+start_idx=0
 for ((i=0; i<$1; i++)); do
     idx=$(((i * simulations_per_thread) + start_idx))
     sims_to_do=$simulations_per_thread
     if [ $i -eq $(( $1 - 1 )) ]; then
         sims_to_do=0
-        # sims_to_do=$simulations_per_thread
+        sims_to_do=$simulations_per_thread
     fi
 
     echo "Starting thread $i with idx $idx and count $sims_to_do"

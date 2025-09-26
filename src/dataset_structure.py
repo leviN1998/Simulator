@@ -87,16 +87,23 @@ def create_rotations(n:int, max_speed:float=80, min_speed:float=5) -> np.ndarray
     # cut out speeds that are not needed
     distances = np.linalg.norm(points, axis=1)
     # points = points[(distances <= 1) & (distances >= (min_speed / max_speed))]
-    points = points[distances <= 1]
+    points = points[(distances <= 1) & (distances >= (0.9))]
 
     # select topspin and backspin
     threshold_angle = 20  # deg
     mask = np.array([is_top_or_backspin(p, threshold_angle) for p in points])
     points = points[mask]
 
-    points = points * max_speed
+    spins = []
+    for p in points:
+        p = p / np.linalg.norm(p)  # normalize
+        for speed in range(int(min_speed), int(max_speed) + 1, 2):
+            spins.append(p * speed)
 
-    return points
+    # points = points * max_speed
+
+    return np.array(spins)
+
 
 
 def create_initial_orientation_topspin(n:int, max_angle: float, min_angle: float) -> np.ndarray:
@@ -132,7 +139,7 @@ def create_table():
     This dataset is tuned to be as close as possible to the real event data.
     
     """
-    path = "/data/lkolmar/datasets/realistic/"
+    path = "/data/lkolmar/datasets/realistic_topspin/"
     try:
         os.mkdir(path)
     except FileExistsError:
@@ -141,8 +148,9 @@ def create_table():
 
     make_folder_structure(path)
 
-    samples = create_rotations(30, max_speed=140, min_speed=2)
+    samples = create_rotations(30, max_speed=140, min_speed=10)
     print(f"Created {len(samples)} rotations")
+
     initial_orientations = create_initial_orientation_topspin(len(samples), max_angle=80, min_angle=-80)
     print(f"Created {len(initial_orientations)} initial orientations")
     # start pos

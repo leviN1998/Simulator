@@ -164,6 +164,7 @@ class Simulator:
             # Window size in normalized coordinates
             self.border_width = self.roi_size / self.resolution_x
             self.border_height = self.roi_size / self.resolution_y
+            self.logger.debug(f"Border Sizes set to {self.border_width} x {self.border_height}")
 
 
 
@@ -384,21 +385,25 @@ class Simulator:
 
             # Set border
             if self.render_roi:
-                min_x = frame / self.total_frames * (1.0 - self.border_width)
-                max_x = min_x + self.border_width
+                ball_x = self.get_screen_positions()[0] / self.resolution_x
+                min_x = max(ball_x - (self.border_width / 2.0), 0.0)
+                max_x = min(ball_x + (self.border_width / 2.0), 1.0)
 
-                ball_y = self.get_screen_positions()[1] / self.resolution_y
-                min_y = max(ball_y - self.border_height / 2.0, 0.0)
-                max_y = min(ball_y + self.border_height / 2.0, 1.0)
+                ball_y = 1 - self.get_screen_positions()[1] / self.resolution_y
+                min_y = max(ball_y - (self.border_height / 2.0), 0.0)
+                max_y = min(ball_y + (self.border_height / 2.0), 1.0)
 
                 self.scene.render.border_min_x = min_x
                 self.scene.render.border_max_x = max_x
                 self.scene.render.border_min_y = min_y
                 self.scene.render.border_max_y = max_y
+                self.logger.debug(f"Frame {frame}: Border set to X: {min_x}-{max_x}, Y: {min_y}-{max_y}")
 
             self.scene.render.filepath = self.tmp_path
             bpy.ops.render.render(write_still=True)
             img = cv2.imread(self.tmp_path)
+            self.logger.debug(f"Rendered image shape: {img.shape}")
+
 
             if self.render_roi:
                 # place ROI in full image at correct position

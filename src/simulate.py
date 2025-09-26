@@ -20,7 +20,7 @@ import time
 import os
 
 
-path = "/data/lkolmar/datasets/realistic/"
+path = "/data/lkolmar/datasets/realistic_topspin/"
 
 
 if __name__ == "__main__":
