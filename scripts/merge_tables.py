@@ -2,7 +2,7 @@ import pandas as pd
 import numpy as np
 
 
-path = "/data/lkolmar/datasets/realistic/"
+path = "/data/lkolmar/datasets/realistic_topspin/"
 
 num_threads = 9
 index_offset = 0 # does the first thread start at 0 or 1?
