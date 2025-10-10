@@ -4,7 +4,7 @@ import numpy as np
 
 path = "/data/lkolmar/datasets/realistic_topspin/"
 
-num_threads = 9
+num_threads = 10
 index_offset = 0 # does the first thread start at 0 or 1?
 
 if __name__ == "__main__":
