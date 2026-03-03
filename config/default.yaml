@@ -5,7 +5,7 @@ render_roi: true                             # Render only a region of interest 
 roi_size: 100                                # Size of the ROI in pixels (only used if render_roi is true)
 
 # Paths
-dataset_path: "/data/lkolmar/datasets/test/" # Path to the dataset directory (scene and noise needs to be found there)
+dataset_path: "/home/levin/dev/Simulator/" # Path to the dataset directory (scene and noise needs to be found there)
 
 # Spin settings
 initial_orientation: [0.0, 0.0, 0.0]         # Initial orientation of the ball in [x, y, z] in axis-angle representation
