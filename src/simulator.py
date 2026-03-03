@@ -43,7 +43,7 @@ class Simulator:
         self.simulation_nr = simulation_nr
         self.pid = pid
         self.num_string = str(simulation_nr).zfill(5)
-        self.tmp_path = self.dataset_path + f"tmp/pid_{self.pid}/image_tmp.png"
+        self.tmp_path = self.dataset_path + f"tmp/image_tmp.png"
         self.output_name = self.dataset_path + f"data/{self.num_string}/{self.num_string}_"
         self.scene_path = self.dataset_path + f"config/scene.blend"
         self.coords_path = self.output_name + "ball_coords.csv"
