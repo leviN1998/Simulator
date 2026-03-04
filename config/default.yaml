@@ -1,36 +1,37 @@
-# General settings
-generate_video: true                         # Generate frame-based video
-stop_early: false                             # stop after a few frames for debugging
-render_roi: true                             # Render only a region of interest (ROI) around the ball to speed up rendering
-roi_size: 100                                # Size of the ROI in pixels (only used if render_roi is true)
-
 # Paths
-dataset_path: "/home/levin/dev/Simulator/" # Path to the dataset directory (scene and noise needs to be found there)
+dataset_path: "/home/levin/dev/Simulator/data/"                        # Path to the dataset directory (base folder)
+tmp_path: "/home/levin/dev/Simulator/data/tmp/"                        # Path to the temporary directory for intermediate files (e.g. rendered frames)
+output_path: "/home/levin/dev/Simulator/data/outputs/"                 # Path to the output directory for final results (e.g. videos, event data)
+scene_path: "/home/levin/dev/Simulator/data/scene.blend"               # Path to the Blender scene file (should be located in the dataset directory)
+coords_path: "/home/levin/dev/Simulator/data/outputs/coords.txt"       # Where to save the ball screen-coordinates
+metadata_path: "/home/levin/dev/Simulator/data/outputs/metadata.txt"   # Where to save the metadata (e.g. ball position, orientation, etc.)
+gt_path: "/home/levin/dev/Simulator/data/outputs/gt.txt"               # Where to save the ground truth (e.g. ball position, orientation, etc.) for the event data
 
-# Spin settings
-initial_orientation: [0.0, 0.0, 0.0]         # Initial orientation of the ball in [x, y, z] in axis-angle representation
-spin_axis: [2.0, 0.0, 0.0]                   # Axis of rotation in [x, y, z]
-total_rotations: 20.0                        # Total number of rotations to perform (rps is set implicitly by the simulation time)
+# general settings
+stop_early: false                            # stop after a few frames for debugging
 
 # Trajectory setting
+initial_orientation: [0.0, 0.0, 0.0]         # Initial orientation of the ball in [x, y, z] in axis-angle representation
 ball_start: [0.0, -0.45, 0.0]                # Starting position of the ball in [m, m, m]
 ball_end: [0.0, 0.45, 0.0]                   # Ending position of the ball in [m, m, m]
 scale_start: 2.3                             # Scale of the ball at the start position
 scale_end: 2.3                               # Scale of the ball at the end position
 
-# simulation settings
-total_frames: 600                            # Total number of frames to simulate
-simulation_time: 450000                      # Simulation time in microseconds (1,000,000 us = 1 s = 1,000 milliseconds)
-video_fps: 30                                # Frames per second for the video
-simulation_samples: 64                       # Number of samples per frame for the simulation
-ball_name: "Sphere"                          # Name of the ball object in Blender
+# Spin settings
+spin_axis: [2.0, 0.0, 0.0]                   # Axis of rotation in [x, y, z] (Note: needs to match blender axis)
+total_rotations: 20.0                        # Total number of rotations to perform (rps is set implicitly by the simulation time)
 
-# camera settings
+# resolution and video settings
 resolution_x: 1280                           # Horizontal resolution of the camera in pixels
 resolution_y: 720                            # Vertical resolution of the camera in pixels
 resolution_percentage: 100                   # Percentage of the resolution to use (100% = full resolution
 focal_length: 9.0                            # Focal length of the camera in [mm]
 pixel_pitch: 0.0075                          # Pixel pitch of the camera in [mm]
+total_frames: 600                            # Total number of frames to simulate (fps is set implicitely by simulation time and frames)
+simulation_time: 450000                      # Simulation time in microseconds (1,000,000 us = 1 s = 1,000 milliseconds)
+video_fps: 30                                # Frames per second for the video (Note: the video will not be at real speed, but a slow-mo which is desired, as the real speed is less than a second in most cases)
+simulation_samples: 64                       # Number of samples per frame for the simulation (more samples means better quality but also longer simulation time)
+ball_name: "Sphere"                          # Name of the ball object in Blender
 
 # event camera settings
 th_pos: 0.05                                 # on threshold

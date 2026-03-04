@@ -1,0 +1,2 @@
+rotation_x,rotation_y,rotation_z,rotation_omega
+2.0,0.0,0.0,2.0
