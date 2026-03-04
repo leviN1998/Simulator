@@ -1,6 +1,8 @@
 import numpy
 import numpy as np
 from dat_files import write_event_dat
+import hdf5plugin
+import h5py
 
 
 class EventBuffer():
@@ -228,3 +230,98 @@ class EventBuffer():
         self.sort()
         write_event_dat(filename, self.ts[:self.i], self.x[:self.i], self.y[:self.i], self.p[:self.i],
                         event_type='dvs', width=width, height=height)
+
+
+    def save_hdf5(self, filename: str, bias, width: int, height: int,
+                  chunk_size: int = 10_000_000,
+                  compression=hdf5plugin.Blosc(cname='zstd', clevel=1, shuffle=hdf5plugin.Blosc.BITSHUFFLE),
+                  clevel=1, sensor="IEBCS based event-simulator"):
+        """ Save the events into a .hdf5 file with the structure as specified by David Joseph and used by the Cognitive Systems Group of the University of Tübingen.
+            Args:
+                filename: path of the file
+                bias: Bias values (simulator) to save in the file. (th_pos, th_neg, th_n, lat, tau, jit, bgn, refp)
+                width: width of the sensor
+                height: height of the sensor
+                chunk_size: number of events per chunk, default 10 million
+                compression: compression method, default Blosc with zstd and bitshuffle
+                clevel: compression level, default 1
+                sensor: name of the sensor, default "IEBCS based event-simulator"
+        """
+        with h5py.File(filename, 'w') as f:
+            event_group = f.create_group('events')
+            dset_x = event_group.create_dataset("x", shape=(0,), maxshape=(None,), dtype="uint16",
+                                                chunks=(chunk_size,), compression=compression, compression_opts=clevel)
+            dset_y = event_group.create_dataset("y", shape=(0,), maxshape=(None,), dtype="uint16",
+                                                chunks=(chunk_size,), compression=compression, compression_opts=clevel)
+            dset_p = event_group.create_dataset("p", shape=(0,), maxshape=(None,), dtype="uint8",
+                                                chunks=(chunk_size,), compression=compression, compression_opts=clevel)
+            dset_t = event_group.create_dataset("t", shape=(0,), maxshape=(None,), dtype="uint64",
+                                                chunks=(chunk_size,), compression=compression, compression_opts=clevel)
+
+            f.create_dataset("t_offset", data=[0], maxshape=(None,))
+            f.attrs.update({"width": width, "height": height, "sensor": sensor})
+            f.create_dataset("bias", data=bias, maxshape=(None,)) # TODO: add good attributes
+
+            # save the events
+            dset_x.resize((self.i,))
+            dset_y.resize((self.i,))
+            dset_p.resize((self.i,))
+            dset_t.resize((self.i,))
+            dset_x[:] = self.get_x()
+            dset_y[:] = self.get_y()
+            dset_p[:] = self.get_p()
+            dset_t[:] = self.get_ts()
+
+            ms_to_idx = generate_ms_to_idx(dset_t[:])
+            dset_ms = f.create_dataset("ms_to_idx", shape=(len(ms_to_idx),), maxshape=(None,), dtype="uint64")
+            dset_ms[:] = ms_to_idx
+
+
+def generate_ms_to_idx(timestamps, last_index=0, previous_time_stamps=0):
+    """
+    Generate an optimized mapping of milliseconds to event indices.
+
+    Args:
+        timestamps (np.ndarray): Array of event timestamps.
+        last_index (int): Starting index for ms_to_idx array.
+        previous_time_stamps (int): Offset for previous timestamps.
+
+    Returns:
+        np.ndarray: Array mapping milliseconds to event indices.
+    """
+    if timestamps.size == 0:
+        return np.array([], dtype=np.int64)
+
+    timestamps_ms = timestamps // 1_000
+    unique_ms, first_indices = np.unique(timestamps_ms, return_index=True)
+
+    max_time = unique_ms[-1] if unique_ms.size > 0 else last_index
+    ms_to_idx = np.zeros(int(max_time + 1 - last_index), dtype=np.int64)
+
+    ms_to_idx[unique_ms - last_index] = first_indices + previous_time_stamps
+    return replace_zeros(ms_to_idx)
+
+
+def replace_zeros(arr):
+    """
+    Replaces zero values within the timestamps.
+
+    Args:
+        arr (np.ndarray): Array mapping milliseconds to event indices.
+
+    Returns:
+        np.ndarray: Cleaned array with filled zero entries.
+    """
+    mask = arr == 0
+    if mask.sum() == 0:
+        return arr
+    if arr.sum() == 0:
+        return arr
+
+    mask[0] = 0
+    valid_idx = np.where(~mask)[0]
+    valid_values = arr[valid_idx]
+    next_nonzero_idx = np.searchsorted(valid_idx, np.where(mask)[0])
+    arr[mask] = valid_values[next_nonzero_idx]
+
+    return arr

@@ -113,9 +113,9 @@ class BlenderSimulator:
     def init_camera(self):
         """ Initialize the camera for the simulation. """
         self.cam = bpy.data.objects['Camera']
-        self.cam.data.lens = self.focal_length
-        self.cam.data.sensor_width = self.pixel_pitch * self.resolution_x * self.resolution_precentage
-        self.cam.data.sensor_height = self.pixel_pitch * self.resolution_y * self.resolution_precentage
+        #self.cam.data.lens = self.focal_length
+        #self.cam.data.sensor_width = self.pixel_pitch * self.resolution_x * self.resolution_precentage
+        #self.cam.data.sensor_height = self.pixel_pitch * self.resolution_y * self.resolution_precentage
         self.cam.data.sensor_fit = 'HORIZONTAL'  # Fit the sensor to the horizontal dimension
         bpy.context.scene.eevee.taa_render_samples = self.simulation_samples
         bpy.context.scene.eevee.taa_samples = self.simulation_samples
@@ -287,20 +287,6 @@ class BlenderSimulator:
             if self.stop_early and frame >= 40:
                 break
 
-        out_avi = self.output_path + "frames.avi"
-        in_pattern = self.tmp_path + "frame_%06d.png"
-
-        cmd = [
-            "ffmpeg",
-            "-y",
-            "-framerate", str(self.fps),
-            "-i", in_pattern,
-            "-c:v", "mjpeg",
-            "-q:v", "3",
-            out_avi,
-        ]
-        
-        subprocess.run(cmd, check=True)
 
         self.save_ground_truth()
         duration = time.time() - start_ts
